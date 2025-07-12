@@ -58,6 +58,10 @@ def fetch_stock_data(df, years_back=5):
                 # Reset index to make Date a column
                 hist_data = hist_data.reset_index()
                 
+                # Fix timezone issue - convert to timezone-naive datetime
+                if 'Date' in hist_data.columns:
+                    hist_data['Date'] = pd.to_datetime(hist_data['Date']).dt.tz_localize(None)
+                
                 # Store in dictionary
                 all_stock_data[symbol] = hist_data
                 successful_fetches += 1
@@ -100,6 +104,9 @@ def create_excel_download(all_stock_data):
         # Combine all data into one sheet
         if all_stock_data:
             combined_data = pd.concat(all_stock_data.values(), ignore_index=True)
+            # Ensure Date column is timezone-naive
+            if 'Date' in combined_data.columns:
+                combined_data['Date'] = pd.to_datetime(combined_data['Date']).dt.tz_localize(None)
             combined_data.to_excel(writer, sheet_name='All_Stock_Data', index=False)
     
     return output.getvalue(), summary_df
